@@ -46,6 +46,21 @@ function App() {
   const completedCount = tasks.filter(t => t.completed).length;
   const progress = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
 
+  // Calendar Logic
+  const today = new Date();
+  const [viewDate, setViewDate] = useState(new Date());
+
+  const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+  const monthName = viewDate.toLocaleString('default', { month: 'long' });
+
+  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanks = Array.from({ length: firstDayOfMonth }, (_, i) => i);
+
+  const prevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+  const goToToday = () => setViewDate(new Date());
+
   const theme = {
     bg: isDarkMode ? '#0f172a' : '#f1f5f9',
     sidebarBg: isDarkMode ? '#1e293b' : '#ffffff',
@@ -67,8 +82,26 @@ function App() {
           <h2 style={{ color: theme.accent, margin: 0, fontSize: '24px', letterSpacing: '-0.5px' }}>🚀 TaskFlow</h2>
         </div>
         <nav style={styles.nav}>
-          <div style={{ ...styles.navItem, backgroundColor: theme.accent + '22', color: theme.accent }}>📊 Dashboard</div>
-          <div style={{ ...styles.navItem, color: theme.subText }}>📅 Calendar</div>
+          <div 
+            onClick={() => setActiveTab('dashboard')}
+            style={{ 
+              ...styles.navItem, 
+              backgroundColor: activeTab === 'dashboard' ? theme.accent + '22' : 'transparent', 
+              color: activeTab === 'dashboard' ? theme.accent : theme.subText 
+            }}
+          >
+            📊 Dashboard
+          </div>
+          <div 
+            onClick={() => setActiveTab('calendar')}
+            style={{ 
+              ...styles.navItem, 
+              backgroundColor: activeTab === 'calendar' ? theme.accent + '22' : 'transparent', 
+              color: activeTab === 'calendar' ? theme.accent : theme.subText 
+            }}
+          >
+            📅 Calendar
+          </div>
           <div style={{ ...styles.navItem, color: theme.subText }}>⭐ Important</div>
           <div style={{ ...styles.navItem, color: theme.subText }}>⚙️ Settings</div>
         </nav>
@@ -131,9 +164,9 @@ function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <h2 style={{ margin: 0 }}>{monthName} {viewDate.getFullYear()}</h2>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))} style={styles.calNavBtn}>‹</button>
-                  <button onClick={() => setViewDate(new Date())} style={styles.calNavBtn}>Today</button>
-                  <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))} style={styles.calNavBtn}>›</button>
+                  <button onClick={prevMonth} style={styles.calNavBtn}>‹</button>
+                  <button onClick={goToToday} style={styles.calNavBtn}>Today</button>
+                  <button onClick={nextMonth} style={styles.calNavBtn}>›</button>
                 </div>
               </div>
               
