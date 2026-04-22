@@ -7,10 +7,26 @@ function App() {
   });
   const [input, setInput] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
+
+  useEffect(() => {
+    // This ensures the app takes up the full width of the browser, 
+    // removing any default constraints from index.css or parent containers.
+    const style = document.createElement('style');
+    style.textContent = `
+      body, html, #root {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
 
   const addTask = () => {
     if (input.trim()) {
@@ -34,7 +50,7 @@ function App() {
     bg: isDarkMode ? '#0f172a' : '#f1f5f9',
     sidebarBg: isDarkMode ? '#1e293b' : '#ffffff',
     cardBg: isDarkMode ? '#1e293b' : '#ffffff',
-    text: isDarkMode ? '#ffffff' : '#0f172a', // Dark mode text is now bright white
+    text: isDarkMode ? '#ffffff' : '#0f172a',
     subText: isDarkMode ? '#94a3b8' : '#64748b',
     border: isDarkMode ? '#334155' : '#e2e8f0',
     accent: '#6366f1',
@@ -76,8 +92,9 @@ function App() {
           </button>
         </header>
 
-        <section style={styles.taskSection}>
-          <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border }}>
+        {activeTab === 'dashboard' ? (
+          <section style={styles.taskSection}>
+            <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border, boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.04)' }}>
             <h3 style={{ marginTop: 0 }}>📝 My Tasks</h3>
             <div style={styles.inputArea}>
               <input 
@@ -107,7 +124,59 @@ function App() {
               )}
             </div>
           </div>
-        </section>
+          </section>
+        ) : (
+          <section style={styles.taskSection}>
+            <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border, boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.04)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                <h2 style={{ margin: 0 }}>{monthName} {viewDate.getFullYear()}</h2>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() - 1)))} style={styles.calNavBtn}>‹</button>
+                  <button onClick={() => setViewDate(new Date())} style={styles.calNavBtn}>Today</button>
+                  <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth() + 1)))} style={styles.calNavBtn}>›</button>
+                </div>
+              </div>
+              
+              <div style={styles.calendarGrid}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} style={{ textAlign: 'center', fontWeight: '700', color: theme.accent, paddingBottom: '15px' }}>{day}</div>
+                ))}
+                {blanks.map(i => <div key={`b-${i}`} />)}
+                {calendarDays.map(day => {
+                  const isToday = day === today.getDate() && viewDate.getMonth() === today.getMonth() && viewDate.getFullYear() === today.getFullYear();
+                  return (
+                    <div 
+                      key={day} 
+                      style={{ 
+                        ...styles.calendarDay, 
+                        backgroundColor: isToday ? theme.accent : 'transparent',
+                        color: isToday ? '#fff' : theme.text,
+                        borderColor: theme.border
+                      }}
+                    >
+                      <span style={{ fontSize: '16px', fontWeight: isToday ? '700' : '500' }}>{day}</span>
+                      {day % 5 === 0 && <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: isToday ? '#fff' : theme.accent, marginTop: '4px' }} />}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ marginTop: '40px', padding: '20px', borderRadius: '15px', backgroundColor: isDarkMode ? '#2c2c2c' : '#f8fafc' }}>
+                <h4 style={{ margin: '0 0 15px 0' }}>Upcoming Schedule</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={styles.scheduleItem}>
+                    <span style={{ color: theme.accent, fontWeight: 'bold' }}>10:00 AM</span>
+                    <span>Team Standup Meeting</span>
+                  </div>
+                  <div style={styles.scheduleItem}>
+                    <span style={{ color: theme.accent, fontWeight: 'bold' }}>02:30 PM</span>
+                    <span>Project Design Review</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       {/* ডান পাশের প্যানেল */}
@@ -138,7 +207,9 @@ const styles = {
     height: '100vh', 
     width: '100%', 
     overflow: 'hidden', // স্ক্রলবার আটকানোর জন্য
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    margin: 0,
+    padding: 0
   },
   
   // Left Sidebar
@@ -149,20 +220,32 @@ const styles = {
   statusBox: { padding: '15px', borderRadius: '12px', marginTop: 'auto' },
 
   // Main Content
-  mainContent: { flex: 1, padding: '40px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' },
+  mainContent: { flex: 1, padding: '40px 25px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' },
   topHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' },
   welcomeBox: { display: 'flex', flexDirection: 'column' },
   welcomeText: { margin: 0, fontSize: '32px', fontWeight: '700', lineHeight: '1.2' },
   themeToggle: { padding: '8px 16px', borderRadius: '20px', border: '1px solid #3b82f6', background: 'transparent', color: '#3b82f6', cursor: 'pointer', fontWeight: '600', fontSize: '13px' },
   
   taskSection: { display: 'flex' }, // Removed center alignment to allow full width
-  mainCard: { width: '100%', padding: '25px', borderRadius: '16px', border: '1px solid', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }, // Removed maxWidth: '750px'
+  mainCard: { 
+    width: '100%', 
+    padding: '30px', 
+    borderRadius: '20px', 
+    border: '1px solid', 
+    transition: 'all 0.3s ease'
+  },
   inputArea: { display: 'flex', gap: '12px', marginBottom: '25px' },
   input: { flex: 1, padding: '14px 18px', borderRadius: '14px', border: '1px solid', outline: 'none', fontSize: '15px', transition: 'all 0.2s' },
   addBtn: { padding: '0 25px', color: '#fff', border: 'none', borderRadius: '14px', cursor: 'pointer', fontWeight: '600', transition: 'transform 0.2s' },
   taskItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 5px' },
   checkbox: { width: '18px', height: '18px', cursor: 'pointer' },
   deleteBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '5px' },
+
+  // Calendar Styles
+  calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' },
+  calendarDay: { height: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid', cursor: 'pointer', transition: '0.2s' },
+  calNavBtn: { padding: '8px 15px', borderRadius: '10px', border: 'none', backgroundColor: '#6366f122', color: '#6366f1', cursor: 'pointer', fontWeight: '600' },
+  scheduleItem: { display: 'flex', gap: '20px', padding: '10px', borderBottom: '1px solid #eeeeee22' },
 
   // Right Sidebar
   rightSidebar: { width: '300px', padding: '25px', borderLeft: '1px solid', display: 'flex', flexDirection: 'column', gap: '35px' },
