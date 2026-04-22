@@ -8,6 +8,7 @@ function App() {
   const [input, setInput] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -116,13 +117,30 @@ function App() {
           >
             ⭐ Important
           </div>
-          <div style={{ ...styles.navItem, color: theme.subText }}>⚙️ Settings</div>
+          <div 
+            onClick={() => setActiveTab('settings')}
+            style={{ 
+              ...styles.navItem, 
+              backgroundColor: activeTab === 'settings' ? theme.accent + '22' : 'transparent', 
+              color: activeTab === 'settings' ? theme.accent : theme.subText 
+            }}
+          >
+            ⚙️ Settings
+          </div>
         </nav>
         
         <div style={{ ...styles.statusBox, backgroundColor: isDarkMode ? '#2c2c2c' : '#f1f5f9' }}>
           <h4 style={{ margin: '0 0 10px 0' }}>Quick Stats</h4>
           <p style={{ margin: '5px 0', fontSize: '14px' }}>Total Tasks: {tasks.length}</p>
           <p style={{ margin: '5px 0', fontSize: '14px' }}>Completed: {completedCount}</p>
+        </div>
+
+        <div style={{ ...styles.userProfile, borderTop: `1px solid ${theme.border}` }}>
+          <div style={styles.avatar}>TU</div>
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ fontWeight: '600', fontSize: '14px', whiteSpace: 'nowrap' }}>Tanzim Ahmed Utsho</div>
+            <div style={{ fontSize: '12px', color: theme.subText, whiteSpace: 'nowrap' }}>Pro Plan</div>
+          </div>
         </div>
       </aside>
 
@@ -133,9 +151,21 @@ function App() {
             <h1 style={{ ...styles.welcomeText, color: theme.text }}>Welcome Back! 👋</h1>
             <p style={{ color: theme.subText, margin: '5px 0 0 0', fontSize: '15px' }}>আজকের পরিকল্পনাগুলো এখানে সাজিয়ে রাখুন।</p>
           </div>
-          <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ ...styles.themeToggle, borderColor: theme.accent, color: theme.accent }}>
-            {isDarkMode ? '☀️ Light' : '🌙 Dark'}
-          </button>
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div style={styles.searchContainer}>
+              <span style={{ opacity: 0.5 }}>🔍</span>
+              <input 
+                type="text" 
+                placeholder="Search tasks..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ ...styles.searchInput, color: theme.text }}
+              />
+            </div>
+            <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ ...styles.themeToggle, borderColor: theme.accent, color: theme.accent }}>
+              {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+          </div>
         </header>
 
         {activeTab === 'dashboard' && (
@@ -155,10 +185,12 @@ function App() {
             </div>
 
             <div style={styles.taskList}>
-              {tasks.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>কোনো টাস্ক খুঁজে পাওয়া যায়নি!</div>
+              {tasks.filter(t => t.text.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>
+                  {searchQuery ? 'No matching tasks found' : 'কোনো টাস্ক খুঁজে পাওয়া যায়নি!'}
+                </div>
               ) : (
-                tasks.map(task => (
+                tasks.filter(t => t.text.toLowerCase().includes(searchQuery.toLowerCase())).map(task => (
                   <div key={task.id} style={{ ...styles.taskItem, borderBottom: `1px solid ${theme.border}`, opacity: task.completed ? 0.6 : 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                       <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task.id)} style={{ ...styles.checkbox, accentColor: theme.accent }} />
@@ -247,10 +279,12 @@ function App() {
                 <button onClick={addTask} style={{ ...styles.addBtn, backgroundColor: '#f59e0b' }}>Add Starred</button>
               </div>
               <div style={styles.taskList}>
-                {tasks.filter(t => t.important).length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>কোনো গুরুত্বপূর্ণ টাস্ক নেই!</div>
+                {tasks.filter(t => t.important && t.text.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>
+                    {searchQuery ? 'No matching important tasks' : 'কোনো গুরুত্বপূর্ণ টাস্ক নেই!'}
+                  </div>
                 ) : (
-                  tasks.filter(t => t.important).map(task => (
+                  tasks.filter(t => t.important && t.text.toLowerCase().includes(searchQuery.toLowerCase())).map(task => (
                     <div key={task.id} style={{ ...styles.taskItem, borderBottom: `1px solid ${theme.border}`, opacity: task.completed ? 0.6 : 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task.id)} style={{ ...styles.checkbox, accentColor: '#f59e0b' }} />
@@ -263,6 +297,44 @@ function App() {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'settings' && (
+          <section style={styles.taskSection}>
+            <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border, boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.04)' }}>
+              <h3 style={{ marginTop: 0, fontSize: '24px' }}>⚙️ Settings</h3>
+              
+              <div style={styles.settingsGroup}>
+                <h4 style={{ ...styles.settingsSubTitle, color: theme.accent }}>Appearance</h4>
+                <div style={styles.settingsItem}>
+                  <span>Interface Theme</span>
+                  <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ ...styles.themeToggle, borderColor: theme.accent, color: theme.accent, margin: 0 }}>
+                    Switch to {isDarkMode ? 'Light' : 'Dark'}
+                  </button>
+                </div>
+              </div>
+
+              <div style={styles.settingsGroup}>
+                <h4 style={{ ...styles.settingsSubTitle, color: theme.accent }}>Notifications</h4>
+                <div style={styles.settingsItem}>
+                  <span>Email Alerts</span>
+                  <input type="checkbox" defaultChecked style={{ width: '20px', height: '20px', accentColor: theme.accent }} />
+                </div>
+                <div style={styles.settingsItem}>
+                  <span>Task Reminders</span>
+                  <input type="checkbox" defaultChecked style={{ width: '20px', height: '20px', accentColor: theme.accent }} />
+                </div>
+              </div>
+
+              <div style={styles.settingsGroup}>
+                <h4 style={{ ...styles.settingsSubTitle, color: theme.accent }}>Privacy & Security</h4>
+                <div style={styles.settingsItem}>
+                  <span>Two-Factor Authentication</span>
+                  <span style={{ fontSize: '13px', color: theme.subText, cursor: 'pointer', textDecoration: 'underline' }}>Enable</span>
+                </div>
               </div>
             </div>
           </section>
@@ -308,6 +380,8 @@ const styles = {
   nav: { display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 },
   navItem: { padding: '12px 15px', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', transition: '0.3s' },
   statusBox: { padding: '15px', borderRadius: '12px', marginTop: 'auto' },
+  userProfile: { marginTop: '20px', paddingTop: '20px', display: 'flex', alignItems: 'center', gap: '12px' },
+  avatar: { width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#6366f1', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px' },
 
   // Main Content
   mainContent: { flex: 1, padding: '40px 25px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' },
@@ -315,7 +389,9 @@ const styles = {
   welcomeBox: { display: 'flex', flexDirection: 'column' },
   welcomeText: { margin: 0, fontSize: '32px', fontWeight: '700', lineHeight: '1.2' },
   themeToggle: { padding: '8px 16px', borderRadius: '20px', border: '1px solid #3b82f6', background: 'transparent', color: '#3b82f6', cursor: 'pointer', fontWeight: '600', fontSize: '13px' },
-  
+  searchContainer: { display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: 'rgba(0,0,0,0.05)', padding: '8px 15px', borderRadius: '20px' },
+  searchInput: { border: 'none', background: 'none', outline: 'none', fontSize: '14px', width: '150px' },
+
   taskSection: { display: 'flex' }, // Removed center alignment to allow full width
   mainCard: { 
     width: '100%', 
@@ -337,6 +413,11 @@ const styles = {
   calendarDay: { height: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid', cursor: 'pointer', transition: '0.2s' },
   calNavBtn: { padding: '8px 15px', borderRadius: '10px', border: 'none', backgroundColor: '#6366f122', color: '#6366f1', cursor: 'pointer', fontWeight: '600' },
   scheduleItem: { display: 'flex', gap: '20px', padding: '10px', borderBottom: '1px solid #eeeeee22' },
+
+  // Settings Styles
+  settingsGroup: { marginBottom: '35px' },
+  settingsSubTitle: { fontSize: '18px', fontWeight: '600', marginBottom: '15px' },
+  settingsItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #eeeeee11' },
 
   // Right Sidebar
   rightSidebar: { width: '300px', padding: '25px', borderLeft: '1px solid', display: 'flex', flexDirection: 'column', gap: '35px' },
