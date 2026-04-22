@@ -34,7 +34,7 @@ function App() {
     bg: isDarkMode ? '#0f172a' : '#f1f5f9',
     sidebarBg: isDarkMode ? '#1e293b' : '#ffffff',
     cardBg: isDarkMode ? '#1e293b' : '#ffffff',
-    text: isDarkMode ? '#f8fafc' : '#0f172a',
+    text: isDarkMode ? '#ffffff' : '#0f172a', // Dark mode text is now bright white
     subText: isDarkMode ? '#94a3b8' : '#64748b',
     border: isDarkMode ? '#334155' : '#e2e8f0',
     accent: '#6366f1',
@@ -68,7 +68,7 @@ function App() {
       <main style={styles.mainContent}>
         <header style={styles.topHeader}>
           <div style={styles.welcomeBox}>
-            <h1 style={styles.welcomeText}>Welcome Back! 👋</h1>
+            <h1 style={{ ...styles.welcomeText, color: theme.text }}>Welcome Back! 👋</h1>
             <p style={{ color: theme.subText, margin: '5px 0 0 0', fontSize: '15px' }}>আজকের পরিকল্পনাগুলো এখানে সাজিয়ে রাখুন।</p>
           </div>
           <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ ...styles.themeToggle, borderColor: theme.accent, color: theme.accent }}>
@@ -155,8 +155,8 @@ const styles = {
   welcomeText: { margin: 0, fontSize: '32px', fontWeight: '700', lineHeight: '1.2' },
   themeToggle: { padding: '8px 16px', borderRadius: '20px', border: '1px solid #3b82f6', background: 'transparent', color: '#3b82f6', cursor: 'pointer', fontWeight: '600', fontSize: '13px' },
   
-  taskSection: { display: 'flex', justifyContent: 'center' },
-  mainCard: { width: '100%', maxWidth: '750px', padding: '25px', borderRadius: '16px', border: '1px solid', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' },
+  taskSection: { display: 'flex' }, // Removed center alignment to allow full width
+  mainCard: { width: '100%', padding: '25px', borderRadius: '16px', border: '1px solid', boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }, // Removed maxWidth: '750px'
   inputArea: { display: 'flex', gap: '12px', marginBottom: '25px' },
   input: { flex: 1, padding: '14px 18px', borderRadius: '14px', border: '1px solid', outline: 'none', fontSize: '15px', transition: 'all 0.2s' },
   addBtn: { padding: '0 25px', color: '#fff', border: 'none', borderRadius: '14px', cursor: 'pointer', fontWeight: '600', transition: 'transform 0.2s' },
