@@ -9,10 +9,19 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
+  const [category, setCategory] = useState('Work');
+  const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good Morning');
+    else if (hour < 18) setGreeting('Good Afternoon');
+    else setGreeting('Good Evening');
+  }, []);
 
   useEffect(() => {
     // This ensures the app takes up the full width of the browser, 
@@ -31,7 +40,7 @@ function App() {
 
   const addTask = () => {
     if (input.trim()) {
-      setTasks([...tasks, { id: Date.now(), text: input, completed: false, important: activeTab === 'important' }]);
+      setTasks([...tasks, { id: Date.now(), text: input, completed: false, important: activeTab === 'important', category }]);
       setInput('');
     }
   };
@@ -46,6 +55,15 @@ function App() {
 
   const deleteTask = (id) => {
     setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const clearCompleted = () => {
+    setTasks(tasks.filter(task => !task.completed));
+  };
+
+  const getCategoryColor = (cat) => {
+    const colors = { Work: '#6366f1', Personal: '#10b981', Urgent: '#f43f5e' };
+    return colors[cat] || '#6366f1';
   };
 
   const completedCount = tasks.filter(t => t.completed).length;
@@ -148,8 +166,8 @@ function App() {
       <main style={styles.mainContent}>
         <header style={styles.topHeader}>
           <div style={styles.welcomeBox}>
-            <h1 style={{ ...styles.welcomeText, color: theme.text }}>Welcome Back! 👋</h1>
-            <p style={{ color: theme.subText, margin: '5px 0 0 0', fontSize: '15px' }}>আজকের পরিকল্পনাগুলো এখানে সাজিয়ে রাখুন।</p>
+            <h1 style={{ ...styles.welcomeText, color: theme.text }}>{greeting}, Tanzim! 👋</h1>
+            <p style={{ color: theme.subText, margin: '5px 0 0 0', fontSize: '15px' }}>আপনার আজকের লক্ষ্যগুলো পূরণ করার সময় হয়েছে।</p>
           </div>
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
             <div style={styles.searchContainer}>
@@ -171,8 +189,21 @@ function App() {
         {activeTab === 'dashboard' && (
           <section style={styles.taskSection}>
             <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border, boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.04)' }}>
-            <h3 style={{ marginTop: 0 }}>📝 My Tasks</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0 }}>📝 My Tasks</h3>
+              <button onClick={clearCompleted} style={{ ...styles.clearBtn, color: theme.danger }}>Clear Completed</button>
+            </div>
+            
             <div style={styles.inputArea}>
+              <select 
+                value={category} 
+                onChange={(e) => setCategory(e.target.value)}
+                style={{ ...styles.select, backgroundColor: isDarkMode ? '#2c2c2c' : '#f8fafc', color: theme.text, borderColor: theme.border }}
+              >
+                <option value="Work">💼 Work</option>
+                <option value="Personal">🏠 Personal</option>
+                <option value="Urgent">🔥 Urgent</option>
+              </select>
               <input 
                 type="text" 
                 value={input} 
@@ -194,7 +225,10 @@ function App() {
                   <div key={task.id} style={{ ...styles.taskItem, borderBottom: `1px solid ${theme.border}`, opacity: task.completed ? 0.6 : 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                       <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task.id)} style={{ ...styles.checkbox, accentColor: theme.accent }} />
-                      <span style={{ textDecoration: task.completed ? 'line-through' : 'none', fontWeight: '500' }}>{task.text}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ textDecoration: task.completed ? 'line-through' : 'none', fontWeight: '500' }}>{task.text}</span>
+                        <span style={{ fontSize: '11px', color: getCategoryColor(task.category), fontWeight: '700', textTransform: 'uppercase' }}>{task.category}</span>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button onClick={() => toggleImportant(task.id)} style={{ ...styles.starBtn, color: task.important ? '#f59e0b' : theme.subText }}>
@@ -401,12 +435,14 @@ const styles = {
     transition: 'all 0.3s ease'
   },
   inputArea: { display: 'flex', gap: '12px', marginBottom: '25px' },
+  select: { padding: '0 15px', borderRadius: '14px', border: '1px solid', outline: 'none', cursor: 'pointer', fontWeight: '600' },
   input: { flex: 1, padding: '14px 18px', borderRadius: '14px', border: '1px solid', outline: 'none', fontSize: '15px', transition: 'all 0.2s' },
   addBtn: { padding: '0 25px', color: '#fff', border: 'none', borderRadius: '14px', cursor: 'pointer', fontWeight: '600', transition: 'transform 0.2s' },
   starBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '5px' },
   taskItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 5px' },
   checkbox: { width: '18px', height: '18px', cursor: 'pointer' },
   deleteBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '5px' },
+  clearBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600' },
 
   // Calendar Styles
   calendarGrid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' },
