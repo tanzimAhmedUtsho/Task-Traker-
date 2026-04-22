@@ -11,6 +11,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('Work');
   const [greeting, setGreeting] = useState('');
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -57,6 +58,11 @@ function App() {
     setTasks(tasks.filter((task) => task.id !== id));
   };
 
+  const handleReminderClick = (text) => {
+    setToast(`Reminder set: ${text} ⏰`);
+    setTimeout(() => setToast(''), 3000);
+  };
+
   const clearCompleted = () => {
     setTasks(tasks.filter(task => !task.completed));
   };
@@ -67,7 +73,16 @@ function App() {
   };
 
   const completedCount = tasks.filter(t => t.completed).length;
+  const remainingCount = tasks.length - completedCount;
   const progress = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+
+  const getMotivation = (p) => {
+    if (tasks.length === 0) return "আজকের লিস্ট তৈরি করুন! ✨";
+    if (p === 0) return "কাজ শুরু করার সময় হয়েছে! 🚀";
+    if (p < 50) return "ভালোই এগোচ্ছেন! 💪";
+    if (p < 100) return "প্রায় শেষ করে ফেলেছেন! ✨";
+    return "চমৎকার! সব শেষ। 🏆";
+  };
 
   // Calendar Logic
   const today = new Date();
@@ -378,20 +393,54 @@ function App() {
       {/* ডান পাশের প্যানেল */}
       <aside style={{ ...styles.rightSidebar, backgroundColor: theme.sidebarBg, borderColor: theme.border }}>
         <h3 style={styles.sideTitle}>Daily Progress</h3>
-        <div style={{ ...styles.progressArea, backgroundColor: isDarkMode ? '#2c2c2c' : '#f8fafc', padding: '20px', borderRadius: '20px' }}>
+        <div style={{ ...styles.progressArea, backgroundColor: isDarkMode ? '#2c2c2c' : '#f8fafc', padding: '25px 20px', borderRadius: '24px', textAlign: 'center' }}>
           <div style={{ ...styles.circle, borderColor: theme.border, borderTopColor: theme.accent }}>
             <h2 style={{ margin: 0, color: theme.accent }}>{progress}%</h2>
           </div>
-          <p style={{ marginTop: '15px', fontSize: '14px', fontWeight: '600', color: theme.subText }}>কাজ সম্পন্ন হয়েছে</p>
+          <p style={{ marginTop: '15px', fontSize: '15px', fontWeight: '700', color: theme.text }}>{getMotivation(progress)}</p>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '20px', borderTop: `1px solid ${theme.border}`, paddingTop: '15px' }}>
+            <div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: theme.accent }}>{completedCount}</div>
+              <div style={{ fontSize: '11px', color: theme.subText, textTransform: 'uppercase' }}>Done</div>
+            </div>
+            <div style={{ width: '1px', backgroundColor: theme.border }}></div>
+            <div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: theme.subText }}>{remainingCount}</div>
+              <div style={{ fontSize: '11px', color: theme.subText, textTransform: 'uppercase' }}>Left</div>
+            </div>
+          </div>
         </div>
 
         <div style={styles.reminderSection}>
           <h3 style={styles.sideTitle}>Reminders</h3>
-          <div style={{...styles.reminderItem, backgroundColor: isDarkMode ? '#2c2c2c' : '#f1f5f9', borderLeft: `4px solid ${theme.accent}`}}>🔔 পানির বিরতি নিন</div>
-          <div style={{...styles.reminderItem, backgroundColor: isDarkMode ? '#2c2c2c' : '#f1f5f9', borderLeft: `4px solid ${theme.accent}`}}>🔔 ১০ মিনিট হাঁটুন</div>
-          <div style={{...styles.reminderItem, backgroundColor: isDarkMode ? '#2c2c2c' : '#f1f5f9', borderLeft: `4px solid ${theme.accent}`}}>🔔 চোখের আরাম দিন</div>
+          {[
+            { icon: '🔔', text: 'পানির বিরতি নিন' },
+            { icon: '🧘', text: '১০ মিনিট হাঁটুন' },
+            { icon: '👁️', text: 'চোখের আরাম দিন' }
+          ].map((rem, index) => (
+            <div 
+              key={index} 
+              onClick={() => handleReminderClick(rem.text)}
+              style={{
+                ...styles.reminderItem, 
+                backgroundColor: isDarkMode ? '#2c2c2c' : '#f1f5f9', 
+                borderLeft: `4px solid ${theme.accent}`,
+                color: theme.text
+              }}
+            >
+              {rem.icon} {rem.text}
+            </div>
+          ))}
         </div>
       </aside>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{ ...styles.toast, backgroundColor: theme.accent }}>
+          {toast}
+        </div>
+      )}
 
     </div>
   );
@@ -461,7 +510,27 @@ const styles = {
   progressArea: { textAlign: 'center' },
   circle: { width: '120px', height: '120px', borderRadius: '50%', border: '10px solid', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto' },
   reminderSection: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  reminderItem: { padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: '500' }
+  reminderItem: { 
+    padding: '14px', 
+    borderRadius: '12px', 
+    fontSize: '14px', 
+    fontWeight: '500', 
+    cursor: 'pointer', 
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    ":hover": { transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }
+  },
+  toast: {
+    position: 'fixed',
+    bottom: '30px',
+    right: '30px',
+    padding: '12px 24px',
+    borderRadius: '12px',
+    color: '#fff',
+    fontWeight: '600',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+    zIndex: 1000,
+    animation: 'slideIn 0.3s ease-out'
+  }
 };
 
 export default App;
