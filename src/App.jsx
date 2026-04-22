@@ -30,13 +30,17 @@ function App() {
 
   const addTask = () => {
     if (input.trim()) {
-      setTasks([...tasks, { id: Date.now(), text: input, completed: false }]);
+      setTasks([...tasks, { id: Date.now(), text: input, completed: false, important: activeTab === 'important' }]);
       setInput('');
     }
   };
 
   const toggleComplete = (id) => {
     setTasks(tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task));
+  };
+
+  const toggleImportant = (id) => {
+    setTasks(tasks.map(task => task.id === id ? { ...task, important: !task.important } : task));
   };
 
   const deleteTask = (id) => {
@@ -102,7 +106,16 @@ function App() {
           >
             📅 Calendar
           </div>
-          <div style={{ ...styles.navItem, color: theme.subText }}>⭐ Important</div>
+          <div 
+            onClick={() => setActiveTab('important')}
+            style={{ 
+              ...styles.navItem, 
+              backgroundColor: activeTab === 'important' ? '#f59e0b22' : 'transparent', 
+              color: activeTab === 'important' ? '#f59e0b' : theme.subText 
+            }}
+          >
+            ⭐ Important
+          </div>
           <div style={{ ...styles.navItem, color: theme.subText }}>⚙️ Settings</div>
         </nav>
         
@@ -125,7 +138,7 @@ function App() {
           </button>
         </header>
 
-        {activeTab === 'dashboard' ? (
+        {activeTab === 'dashboard' && (
           <section style={styles.taskSection}>
             <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border, boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.04)' }}>
             <h3 style={{ marginTop: 0 }}>📝 My Tasks</h3>
@@ -151,14 +164,21 @@ function App() {
                       <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task.id)} style={{ ...styles.checkbox, accentColor: theme.accent }} />
                       <span style={{ textDecoration: task.completed ? 'line-through' : 'none', fontWeight: '500' }}>{task.text}</span>
                     </div>
-                    <button onClick={() => deleteTask(task.id)} style={{ ...styles.deleteBtn, color: theme.danger }}>✕</button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button onClick={() => toggleImportant(task.id)} style={{ ...styles.starBtn, color: task.important ? '#f59e0b' : theme.subText }}>
+                        {task.important ? '★' : '☆'}
+                      </button>
+                      <button onClick={() => deleteTask(task.id)} style={{ ...styles.deleteBtn, color: theme.danger }}>✕</button>
+                    </div>
                   </div>
                 ))
               )}
             </div>
           </div>
           </section>
-        ) : (
+        )}
+
+        {activeTab === 'calendar' && (
           <section style={styles.taskSection}>
             <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border, boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
@@ -206,6 +226,43 @@ function App() {
                     <span>Project Design Review</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'important' && (
+          <section style={styles.taskSection}>
+            <div style={{ ...styles.mainCard, backgroundColor: theme.cardBg, borderColor: theme.border, boxShadow: isDarkMode ? '0 10px 40px rgba(0,0,0,0.4)' : '0 10px 40px rgba(0,0,0,0.04)' }}>
+              <h3 style={{ marginTop: 0, color: '#f59e0b', fontSize: '24px' }}>⭐ Important Tasks</h3>
+              <div style={styles.inputArea}>
+                <input 
+                  type="text" 
+                  value={input} 
+                  onChange={(e) => setInput(e.target.value)} 
+                  onKeyPress={(e) => e.key === 'Enter' && addTask()}
+                  placeholder="একটি গুরুত্বপূর্ণ টাস্ক লিখুন..." 
+                  style={{ ...styles.input, backgroundColor: isDarkMode ? '#2c2c2c' : '#fff', color: theme.text, borderColor: theme.border }}
+                />
+                <button onClick={addTask} style={{ ...styles.addBtn, backgroundColor: '#f59e0b' }}>Add Starred</button>
+              </div>
+              <div style={styles.taskList}>
+                {tasks.filter(t => t.important).length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', opacity: 0.5 }}>কোনো গুরুত্বপূর্ণ টাস্ক নেই!</div>
+                ) : (
+                  tasks.filter(t => t.important).map(task => (
+                    <div key={task.id} style={{ ...styles.taskItem, borderBottom: `1px solid ${theme.border}`, opacity: task.completed ? 0.6 : 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task.id)} style={{ ...styles.checkbox, accentColor: '#f59e0b' }} />
+                        <span style={{ textDecoration: task.completed ? 'line-through' : 'none', fontWeight: '500' }}>{task.text}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={() => toggleImportant(task.id)} style={{ ...styles.starBtn, color: '#f59e0b' }}>★</button>
+                        <button onClick={() => deleteTask(task.id)} style={{ ...styles.deleteBtn, color: theme.danger }}>✕</button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </section>
@@ -270,6 +327,7 @@ const styles = {
   inputArea: { display: 'flex', gap: '12px', marginBottom: '25px' },
   input: { flex: 1, padding: '14px 18px', borderRadius: '14px', border: '1px solid', outline: 'none', fontSize: '15px', transition: 'all 0.2s' },
   addBtn: { padding: '0 25px', color: '#fff', border: 'none', borderRadius: '14px', cursor: 'pointer', fontWeight: '600', transition: 'transform 0.2s' },
+  starBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '5px' },
   taskItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 5px' },
   checkbox: { width: '18px', height: '18px', cursor: 'pointer' },
   deleteBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '5px' },
